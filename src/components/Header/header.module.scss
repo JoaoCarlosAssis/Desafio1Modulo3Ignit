@@ -1,1 +1,19 @@
-// TODO
+.contentHeader{
+  display: flex;
+  max-width: 700px;
+  margin: 2.7rem auto 4rem;
+  padding: 0 2rem;
+
+  img + img{
+    margin-left: 1.1rem;
+  }
+  &::after{
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--highlight);
+    align-self: flex-end;
+    margin: 0 0 0.3rem 0.4rem;
+  }
+}
