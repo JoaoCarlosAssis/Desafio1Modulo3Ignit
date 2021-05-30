@@ -14,6 +14,18 @@
 body{
   background: var(--background)
 }
+body::-webkit-scrollbar {
+  width: 0.35rem;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: var(--highlight);
+  border-radius: 2rem;
+}
 
 html{
   @media(max-width: 1080px){
