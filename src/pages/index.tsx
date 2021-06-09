@@ -46,7 +46,6 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
   const [posts, setPosts] = useState<Post[]>(formattedDatePost);
   const [nextPage, setNexPage] = useState(postsPagination.next_page);
   const [currentPage, setCurrentPage] = useState(1);
-
   async function handleNextPage(): Promise<void> {
     if (currentPage !== 1 && nextPage === null) {
       return;

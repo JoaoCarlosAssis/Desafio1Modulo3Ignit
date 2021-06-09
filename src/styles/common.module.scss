@@ -3,3 +3,14 @@
   margin: 0 auto;
   padding: 0 2rem;
 }
+.preview{
+  display: block;
+  padding: 1rem 0.5rem;
+  background-color: var(--heading);
+  text-align: center;
+  border-radius: 0.25rem;
+  margin: 5rem 0;
+  color: var(--background);
+  font-size: 1.125rem;
+  font-weight:600;
+}

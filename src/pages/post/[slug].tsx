@@ -5,10 +5,12 @@ import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { RichText } from 'prismic-dom';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import Header from '../../components/Header';
 import { getPrismicClient } from '../../services/prismic';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import Comments from '../../components/Comment';
 
 interface Post {
   first_publication_date: string | null;
@@ -30,21 +32,41 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  navigation: {
+    prevPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+    nextPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+  };
+  preview: boolean;
 }
 
-export default function Post({ post }: PostProps): JSX.Element {
+export default function Post({
+  post,
+  navigation,
+  preview,
+}: PostProps): JSX.Element {
   const router = useRouter();
   if (router.isFallback) {
     return <h1>Carregando...</h1>;
   }
-  const wordsTotal = post.data.content.reduce((total, contentItem) => {
+  const totalWords = post.data.content.reduce((total, contentItem) => {
     total += contentItem.heading.split(' ').length;
 
     const words = contentItem.body.map(item => item.text.split(' ').length);
     words.map(word => (total += word));
     return total;
   }, 0);
-  const readTime = Math.ceil(wordsTotal / 200);
+
+  const readTime = Math.ceil(totalWords / 200);
   const postFormatDate = {
     ...post,
     first_publication_date: format(
@@ -53,6 +75,18 @@ export default function Post({ post }: PostProps): JSX.Element {
       { locale: ptBR }
     ),
   };
+  const isPostEdited =
+    post.first_publication_date !== post.last_publication_date;
+  let dateEditPost;
+  if (isPostEdited) {
+    dateEditPost = format(
+      new Date(post.last_publication_date),
+      "'* editado em' dd MMM yyyy', às' H':'mm",
+      {
+        locale: ptBR,
+      }
+    );
+  }
   return (
     <>
       <Header />
@@ -78,6 +112,9 @@ export default function Post({ post }: PostProps): JSX.Element {
               {`${readTime} min`}
             </span>
           </div>
+          <div className={styles.LastEdited}>
+            <span>{isPostEdited && dateEditPost}</span>
+          </div>
           {post.data.content.map(content => {
             return (
               <article className={styles.contentPost} key={content.heading}>
@@ -91,6 +128,32 @@ export default function Post({ post }: PostProps): JSX.Element {
             );
           })}
         </article>
+        <div className={styles.btnNextEndPrevious}>
+          {navigation?.prevPost.length > 0 && (
+            <div>
+              <span>{navigation.prevPost[0].data.title}</span>
+              <Link href={`/post/${navigation.prevPost[0].uid}`}>
+                <a>Post anterior</a>
+              </Link>
+            </div>
+          )}
+          {navigation?.nextPost.length > 0 && (
+            <div>
+              <span>{navigation.nextPost[0].data.title}</span>
+              <Link href={`/post/${navigation.nextPost[0].uid}`}>
+                <a>Próximo Post</a>
+              </Link>
+            </div>
+          )}
+        </div>
+        <Comments />
+        {preview && (
+          <aside>
+            <Link href="/api/exit-preview">
+              <a className={commonStyles.preview}>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </main>
     </>
   );
@@ -115,10 +178,34 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
   const { slug } = params;
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', String(slug), {});
+  const response = await prismic.getByUID('posts', String(slug), {
+    ref: previewData?.ref || null,
+  });
+
+  const prevPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date]',
+    }
+  );
+
+  const nextPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.last_publication_date desc]',
+    }
+  );
 
   const post = {
     uid: response.uid,
@@ -139,9 +226,15 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       }),
     },
   };
+
   return {
     props: {
       post,
+      navigation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results,
+      },
+      preview,
     },
     revalidate: 60 * 60 * 24,
   };

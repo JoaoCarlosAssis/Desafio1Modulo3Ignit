@@ -34,7 +34,15 @@
       margin-right: 0.656rem;
     }
   }
-
+}
+.LastEdited{
+  span{
+    display: block;
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--info);
+    margin-top: 1rem;
+  }
 }
 .contentPost{
 
@@ -58,4 +66,41 @@
       font-weight: 700;
       color:var(--body)
     }
+    &:last-child{
+      padding-bottom: 1rem;
+      margin-bottom: 3rem;
+      border-bottom: 1px solid rgba(215, 215, 215, 0.1) ;
+    }
+
 }
+
+.btnNextEndPrevious{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 5rem;
+  div{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    span{
+      font-size: 1.125rem;
+      font-weight: 400;
+      color: var(--heading);
+      margin-bottom: 0.5rem;
+    }
+    a{
+      display: flex;
+      border: none;
+      background: transparent;
+      color: var(--highlight);
+      font-weight: 600;
+    }
+  }
+  div + div{
+    text-align: right;
+    a{
+      justify-content: flex-end;
+    }
+  }
+}
+
